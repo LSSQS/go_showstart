@@ -114,7 +114,9 @@ func (s *Service) monitorKeyword(ctx context.Context, keyword string) error {
 	resp, err := s.client.ActivitySearchList(ctx, s.cfg.CityCode, keyword)
 	if err != nil {
 		log.Logger.Error("请求演出列表失败", zap.String("keyword", keyword), zap.Error(err))
-		s.alert(fmt.Sprintf("关键词 %s 演出列表请求失败：%v", keyword, err))
+		if isAuthError(err) {
+			s.alert(fmt.Sprintf("关键词 %s 演出列表请求失败：%v", keyword, err))
+		}
 		return err
 	}
 
@@ -154,7 +156,6 @@ func (s *Service) processTimedActivity(activity *client.ActivityInfo, keyword st
 	activityURL := fmt.Sprintf("https://wap.showstart.com/pages/activity/detail/detail?activityId=%d", activity.ActivityID)
 	if err := s.notifier.SendStructured("timed", keyword, activity.Title, activity.ShowTime, activity.SiteName, activityURL); err != nil {
 		log.Logger.Error("Webhook 通知失败", zap.String("type", "timed_purchase"), zap.Error(err))
-		s.alert(fmt.Sprintf("告警：通知发送失败，关键词=%s，演出=%s，错误=%v", keyword, activity.Title, err))
 		return
 	}
 
@@ -176,7 +177,9 @@ func (s *Service) ensureInitialized(ctx context.Context) {
 		resp, err := s.client.ActivitySearchList(ctx, s.cfg.CityCode, keyword)
 		if err != nil {
 			log.Logger.Warn("初始化拉取演出失败", zap.String("keyword", keyword), zap.Error(err))
-			s.alert(fmt.Sprintf("初始化失败：关键词 %s 拉取异常：%v", keyword, err))
+			if isAuthError(err) {
+				s.alert(fmt.Sprintf("初始化失败：关键词 %s 拉取异常：%v", keyword, err))
+			}
 			continue
 		}
 
@@ -205,6 +208,14 @@ func (s *Service) alert(message string) {
 	if err := s.notifier.SendAlert(message); err != nil {
 		log.Logger.Warn("告警发送失败", zap.Error(err))
 	}
+}
+
+func isAuthError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "登录") || strings.Contains(msg, "login") || strings.Contains(msg, "token") || strings.Contains(msg, "unauthorized")
 }
 
 func normalizeKeyword(input string) string {
