@@ -1,0 +1,14 @@
+workflows:
+  build-go-windows:
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      vars:
+        GO111MODULE: "on"
+    scripts:
+      - name: Install dependencies and build for Windows
+        script: |
+          go mod tidy
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o showstart.exe
+    artifacts:
+      - showstart.exe
