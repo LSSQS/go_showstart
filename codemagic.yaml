@@ -11,7 +11,7 @@ workflows:
         script: |
           go mod tidy
 
-      - name: Build iOS arm64 default output
+      - name: Build iOS arm64
         script: |
           CGO_ENABLED=1 \
           GOOS=darwin \
@@ -20,10 +20,10 @@ workflows:
           CXX=clang++ \
           go build -buildmode=c-archive
 
-      - name: Show files
+      - name: List files
         script: |
           ls -la
 
     artifacts:
-      - main.a
-      - main.h
+      - "*.a"
+      - "*.h"
