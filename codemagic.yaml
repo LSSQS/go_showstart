@@ -11,21 +11,19 @@ workflows:
         script: |
           go mod tidy
 
-      # 重点：输出名字必须带 _arm64，Go 才会自动生成同名 .h
-      - name: Build iOS arm64 static library
+      - name: Build iOS arm64 default output
         script: |
           CGO_ENABLED=1 \
           GOOS=darwin \
           GOARCH=arm64 \
           CC=clang \
           CXX=clang++ \
-          go build -buildmode=c-archive -o libshowstart_arm64.a .
+          go build -buildmode=c-archive
 
-      # 看一下到底生成了啥
-      - name: List files
+      - name: Show files
         script: |
           ls -la
 
     artifacts:
-      - libshowstart_arm64.a
-      - libshowstart_arm64.h
+      - main.a
+      - main.h
