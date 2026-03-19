@@ -1,14 +1,41 @@
 workflows:
-  build-go-windows:
+  build-go-ios-universal:
+    name: Build Go iOS Static Library (ALL files)
     instance_type: mac_mini_m2
-    max_build_duration: 30
+    max_build_duration: 40
     environment:
       vars:
         GO111MODULE: "on"
     scripts:
-      - name: Install dependencies and build for Windows
+      - name: Go mod tidy
         script: |
           go mod tidy
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o showstart.exe
+
+      # 编译 真机 arm64
+      - name: Build iOS arm64
+        script: |
+          CGO_ENABLED=1 \
+          GOOS=darwin \
+          GOARCH=arm64 \
+          CC=clang \
+          CXX=clang++ \
+          go build -buildmode=c-archive -o libshowstart_arm64.a .
+
+      # 编译 模拟器 x86_64
+      - name: Build iOS simulator x86_64
+        script: |
+          CGO_ENABLED=1 \
+          GOOS=darwin \
+          GOARCH=x86_64 \
+          CC=clang \
+          CXX=clang++ \
+          go build -buildmode=c-archive -o libshowstart_x86_64.a .
+
+      # 合并成一个通用库
+      - name: Create universal library
+        script: |
+          lipo -create libshowstart_arm64.a libshowstart_x86_64.a -output libshowstart.a
+
     artifacts:
-      - showstart.exe
+      - libshowstart.a
+      - libshowstart.h
