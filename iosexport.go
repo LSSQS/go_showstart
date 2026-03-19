@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/staparx/go_showstart/client"
 	"github.com/staparx/go_showstart/monitor"
-	"github.com/staparx/go_showstart/order"
 	"github.com/staparx/go_showstart/util"
 )
 
@@ -136,7 +135,8 @@ func SubmitOrderForiOS(configJSON, orderReqJSON *C.char) *C.char {
 	if err := json.Unmarshal([]byte(C.GoString(configJSON)), &cfg); err != nil {
 		return C.CString(`{"success":false}`)
 	}
-	var req order.OrderRequest
+	// 直接用 OrderRequest（同属 main 包）
+	var req OrderRequest
 	_ = json.Unmarshal([]byte(C.GoString(orderReqJSON)), &req)
 	cli := client.NewShowStartClient(&cfg)
 	resp, _ := cli.Order(&req)
