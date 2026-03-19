@@ -3,10 +3,10 @@ package main
 import "C"
 import (
 	"encoding/json"
-	"go_showstart/client"
-	"go_showstart/monitor"
-	"go_showstart/order"
-	"go_showstart/util"
+	"github.com/staparx/go_showstart/client"
+	"github.com/staparx/go_showstart/monitor"
+	"github.com/staparx/go_showstart/order"
+	"github.com/staparx/go_showstart/util"
 )
 
 //export GenerateSignForiOS
